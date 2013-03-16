@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 
-import struct
 import numpy as np
+import matplotlib.pyplot as plt
 
-print "hello"
 
 nsamples = 1001
 ntraces = 101
@@ -12,10 +11,25 @@ noffsets = 5
 
 
 f = open('SEIS-filt', 'r')
-nread = nsamples * ntraces * noffsets
-
 
 # read data in ieee754 format
-inputs = struct.unpack('f'*nread, f.read(4*nread))
+inputs = np.fromfile(f, dtype=np.float32)
 
-print inputs
+
+# reshape
+#data = inputs.reshape(nsamples,ntraces,noffsets)
+data = inputs.reshape(noffsets,ntraces,nsamples)
+
+x = np.linspace(1,nsamples,nsamples)
+
+
+print data.shape
+print x.size
+
+#plt.plot(x,data[:,1,1],'-')
+
+plt.plot(data[1,2,:],x,'-')
+plt.show()
+
+
+
