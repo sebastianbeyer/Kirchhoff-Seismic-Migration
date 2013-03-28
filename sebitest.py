@@ -57,50 +57,72 @@ data = inputs.reshape(noffsets,ntraces,nsamples)
 #PlotData(1)
 #PlotData(4)
 #plt.show()
-nx = 100
-dx = 20
-nz = 101
-dz = 100
 ntrc = ntraces
-noff =noffsets
+noff = noffsets
 
-v=9000
 
 offsets = [0, 500, 1000, 1500, 2000]
 
-dcdp = 20
-
-R = np.zeros((20, nz))
-
-for ix in xrange(0, 19):        #loop over discretiziced undergroundpoints in x
-    x = dx*ix
-    for iz in xrange(1, nz):    #loop over discretiziced undergroundpoints in z
-        z = dz*iz               #(depth)
-        
-        for itrc in xrange(0, ntrc-1):     #loop over all traces
-            for ioff in xrange(0, noff-1):  #loop over all offsets
-                ksi = dcdp * itrc           # cdp point
-                h = offsets[ioff]/2         # half offset
-                rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point-source
-                rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point-reviever
-
-                wco = ( z/rs * np.sqrt(rs/rr) + z/rr * np.sqrt(rr/rs) ) /v
-
-                t = (rs + rr)/v
-                it = np.floor(t/dt)
-
-                #print rs, rr, ix, iz, t, it
-
-                if (it <= nsamples-1):
-                    #print 'data {0:.0e}'.format(data[ioff,itrc,it]*wco/np.sqrt(2*3.14))
-                    R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
 
 
-#print R[0,:]
+
+def Migrate(nx,dx,nz,dz,dcdp,v):
+    
+    R = np.zeros((nx, nz))
+    for ix in xrange(0, nx):        #loop over discretiziced undergroundpoints in x
+        x = dx*ix
+        for iz in xrange(1, nz):    #loop over discretiziced undergroundpoints in z
+            z = dz*iz               #(depth)
+            
+            for itrc in xrange(0, ntrc-1):     #loop over all traces
+                for ioff in xrange(0, noff-1):  #loop over all offsets
+                    ksi = dcdp * itrc           # cdp point
+                    h = offsets[ioff]/2         # half offset
+                    rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point-source
+                    rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point-reviever
+    
+                    wco = ( z/rs * np.sqrt(rs/rr) + z/rr * np.sqrt(rr/rs) ) /v
+    
+                    t = (rs + rr)/v             # resulting time
+                    it = np.floor(t/dt)         # nearest neighbor for timesample
+    
+                    #print rs, rr, ix, iz, t, it
+    
+                    if (it <= nsamples-1):
+                        R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
+    
+    return R
+
+
+#R = Migrate(1,20,101,100,20,9000)
+
+V = xrange(1000,14000,100)
+
+nz=201
+nx=1
 
 x = np.linspace(0,nsamples*dt,nz)
+
 plt.figure()
-for n in xrange(0, 19):
-    plt.plot(R[n,:]*100+n,x,'k-')
+for n in xrange(0, len(V)-1):
+    R = Migrate(1,20,201,50,20,V[n])
+    plt.plot(R[0,:]*100+n,x,'k-')
 
 plt.show()
+
+
+'''
+
+plt.figure()
+for n in xrange(0, nx):
+    plt.plot(R[n,:]*100+n,x,'k-')
+
+plt.gca().invert_yaxis()
+plt.xlim([0,ntraces])
+plt.ylim([nsamples*dt,0])
+plt.ylabel('Time in seconds')
+plt.title('Trace')
+plt.gca().xaxis.tick_top()
+
+plt.show()
+'''
