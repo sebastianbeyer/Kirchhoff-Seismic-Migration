@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.fftpack
 
+import mod_cyMigrate
 
 def PlotSpectrum(trace):
     '''
@@ -66,7 +67,7 @@ offsets = [0, 500, 1000, 1500, 2000]
 
 
 
-def Migrate(nx,dx,nz,dz,dcdp,v):
+def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsamples,ntrc,noff):
     
     R = np.zeros((nx, nz))
     for ix in xrange(0, nx):        #loop over discretiziced undergroundpoints in x
@@ -94,24 +95,25 @@ def Migrate(nx,dx,nz,dz,dcdp,v):
     return R
 
 
-#R = Migrate(1,20,101,100,20,9000)
+#R = Migrate(data,1,20,201,50,0.002,20,9000,offsets,nsamples,ntrc,noff)
+R = mod_cyMigrate.cyMigrate(data,1,20,201,50,0.002,20,9000,offsets,nsamples,ntrc,noff)
 
 V = xrange(1000,14000,100)
 
 nz=201
 nx=1
+'''
 
 x = np.linspace(0,nsamples*dt,nz)
-
 plt.figure()
 for n in xrange(0, len(V)-1):
     R = Migrate(1,20,201,50,20,V[n])
     plt.plot(R[0,:]*100+n,x,'k-')
 
 plt.show()
-
-
 '''
+
+x = np.linspace(0,nsamples*dt,nz)
 
 plt.figure()
 for n in xrange(0, nx):
@@ -124,5 +126,4 @@ plt.ylabel('Time in seconds')
 plt.title('Trace')
 plt.gca().xaxis.tick_top()
 
-plt.show()
-'''
+#plt.show()
