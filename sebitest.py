@@ -94,14 +94,15 @@ def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsamples,ntrc,noff):
     
     return R
 
+nz=201
 
-#R = Migrate(data,1,20,201,50,0.002,20,9000,offsets,nsamples,ntrc,noff)
-R = mod_cyMigrate.cyMigrate(data,1,20,201,50,0.002,20,9000,offsets,nsamples,ntrc,noff)
+nx=5
+
+R = Migrate(data,nx,20,nz,50,0.002,20,12000,offsets,nsamples,ntrc,noff)
+#R = mod_cyMigrate.cyMigrate(data,nx,20,nz,50,0.002,20,12000,offsets,nsamples,ntrc,noff)
 
 V = xrange(1000,14000,100)
 
-nz=201
-nx=1
 '''
 
 x = np.linspace(0,nsamples*dt,nz)

@@ -1,15 +1,21 @@
 cimport numpy as np
 import numpy as np
 
-def cyMigrate(data,int nx, int dx,int nz,int dz,double dt,int dcdp,v,offsets,int nsamples,int ntrc,int noff):
-    R = np.zeros((nx, nz))
-    for ix in xrange(0, nx):        #loop over discretiziced undergroundpoints in x
+
+def cyMigrate(np.ndarray[float, ndim=3] data,int nx, int dx,int nz,int dz,float dt,int dcdp,int v,list offsets,int nsamples,int ntrc,int noff):
+    cdef np.ndarray[float, ndim=2] R = np.zeros((nx, nz),dtype=np.float32)
+    cdef int ix, iz, itrc, ioff
+    cdef int x, z
+    cdef int ksi
+    cdef float h, rs, rr, wco, t
+    cdef int it
+    for ix in range(0, nx):        #loop over discretiziced undergroundpoints in x
         x = dx*ix
-        for iz in xrange(1, nz):    #loop over discretiziced undergroundpoints in z
+        for iz in range(1, nz):    #loop over discretiziced undergroundpoints in z
             z = dz*iz               #(depth)
             
-            for itrc in xrange(0, ntrc-1):     #loop over all traces
-                for ioff in xrange(0, noff-1):  #loop over all offsets
+            for itrc in range(0, ntrc-1):     #loop over all traces
+                for ioff in range(0, noff-1):  #loop over all offsets
                     ksi = dcdp * itrc           # cdp point
                     h = offsets[ioff]/2         # half offset
                     rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point-source
