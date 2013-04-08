@@ -1,7 +1,0 @@
-.DS_Store
-*.so
-*.c
-*.pyc
-build
-latex
-figures
