@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-
+from __future__ import division     # true float division
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
 import scipy.fftpack
+
+
 
 # cython for more speed
 import mod_cyMigrate
@@ -25,28 +27,12 @@ def PlotSpectrum(trace):
     half = len(freqs)/2
     # plot
     plt.figure()
-    plt.plot(freqs[0:half],FFT[0:half],'-')
+    plt.plot(freqs[0:half],FFT[0:half],'#384c80',linewidth=2)
     #plt.xlim([0,200])
     plt.xlabel('Frequency in [Hz]')
 
     plt.savefig('./figures/spectrum.eps', bbox_inches=0)
 
-def PlotWiggle(offset):
-    '''
-    Do a wiggle plot of selected offset
-    '''
-    x = np.linspace(0,nsmp*dt,nsmp)
-    plt.figure()
-    for n in xrange(1, ntrc):
-        plt.plot(data[offset,n,:]+n,x,'k-')
-
-    plt.gca().invert_yaxis()
-    plt.xlim([0,ntrc])
-    plt.ylim([nsmp*dt,0])
-    plt.ylabel('Time in [s]')
-    plt.title('Trace')
-    plt.gca().xaxis.tick_top()
-    plt.show()
 
 
 def PlotImg(data2d,name):
@@ -55,15 +41,25 @@ def PlotImg(data2d,name):
     filepath = "./figures/" + name + ".eps"
 
     plt.figure()
-    imgplot = plt.imshow(data2d.T, extent=[0, ntrc*noff/100,nsmp*dt,0],cmap=colormap)
+    imgplot = plt.imshow(data2d.T, extent=[0,ntrc*dx*noff, nz*dz,0],cmap=colormap)
+
+    # lines and offsets
+    for i in range(noff):
+        plt.axvline(linewidth=2, color='k',x=(i+1)*ntrc*dx)
+        plt.text((i+1)*ntrc*dx-ntrc*dx/2,nz*dz+50,offsets[i],verticalalignment='top',horizontalalignment='center')        #custom axis
+
+    # new x axis
+    plt.gca().axes.get_xaxis().set_ticks([])  # hide original
+
+
     plt.axes().set_aspect('auto')                       # set aspect ratio to auto
-    plt.xlabel('Offset')
+    plt.xlabel('\n\nOffset')
     plt.ylabel('Time in [s]')
     plt.savefig(filepath, bbox_inches=0)
     plt.show()
 
 
-def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff):
+def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
     
     R = np.zeros((nx, nz))
     for ix in xrange(0, nx):        #loop over discreticized undergroundpoints in x
@@ -72,30 +68,29 @@ def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff):
             z = dz*iz               #(depth)
             
             for itrc in xrange(0, ntrc):     #loop over all traces
-                for ioff in xrange(0, noff):  #loop over all offsets
-                    ksi = dcdp * itrc           # cdp point
-                    h = offsets[ioff]/2         # half offset
-                    rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point<->source
-                    rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point<->reciever
+                ksi = dcdp * itrc           # cdp point
+                h = offsets[ioff]/2         # half offset
+                rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point<->source
+                rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point<->reciever
     
-                    wco = ( z/rs * np.sqrt(rs/rr) + z/rr * np.sqrt(rr/rs) ) /v
+                wco = ( z/rs * np.sqrt(rs/rr) + z/rr * np.sqrt(rr/rs) ) /v
     
-                    t = (rs + rr)/v             # resulting time
-                    it = np.floor(t/dt)         # nearest neighbor for timesample
+                t = (rs + rr)/v             # resulting time
+                it = np.floor(t/dt)         # nearest neighbor for timesample
     
-                    #print rs, rr, ix, iz, t, it
+                #print rs, rr, ix, iz, t, it
     
-                    if (it <= nsmp-1):
-                        R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
+                if (it <= nsmp-1):
+                    R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
     
     return R
 
 def benchmarkfunc(mode):
     nx=1
     if (mode == 'python'):
-        R = Migrate(data,nx,dx,nz,dz,dt,dcdp,3000,offsets,nsmp,ntrc,noff)
+        R = Migrate(data,nx,dx,nz,dz,dt,dcdp,3000,offsets,nsmp,ntrc,noff,1)
     if (mode == 'cython'):
-        R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,3000,offsets,nsmp,ntrc,noff)
+        R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,3000,offsets,nsmp,ntrc,noff,1)
 
 
 
@@ -109,7 +104,7 @@ def benchmark():
     print py_time
 
     print "cython code:"
-    cy_time = timeit.timeit("kirchhoffmigration.benchmarkfunc('cython')",setup="importkirchhoffmigration", number=10)
+    cy_time = timeit.timeit("kirchhoffmigration.benchmarkfunc('cython')",setup="import kirchhoffmigration", number=10)
     print cy_time
 
 
@@ -125,7 +120,7 @@ def v_analysis(vmin, vmax):
     nx=1                                # only compute one trace
     M = np.zeros((nz, nvels))
     for n in xrange(0, len(V)-1):
-        R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V[n],offsets,nsmp,ntrc,noff)
+        R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V[n],offsets,nsmp,ntrc,noff,1)
         M[:,n] = R[0,:]
 
     plt.figure()
@@ -137,21 +132,38 @@ def v_analysis(vmin, vmax):
 
     return M
 
-def full_migration(data,name):
+def full_migration(data):
     nx = ntrc
     V = 2950
-    filepath = "./figures/" + name + ".eps"
-    R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V,offsets,nsmp,ntrc,noff)
 
-    # image
-    plt.figure()
-    imgplot = plt.imshow(R.T, extent=[0,nx*dx ,nz*dz,0],cmap=colormap)
-    plt.ylabel('Depth z in [m]')
-    plt.xlabel('x in [m]')
-    plt.savefig(filepath, bbox_inches=0)
-    plt.show()
+    R = np.zeros((noff,nx, nz))
+    for ioff in range(noff):            # each offset in its own layer
+        R[ioff,:,:] = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V,offsets,nsmp,ntrc,noff,ioff)
 
     return R
+
+def plot_offsets(data,name):
+
+    data2d = data.reshape(noff*ntrc,nz)
+    filepath = "./figures/" + name + ".eps"
+    plt.figure()
+    plt.imshow(data2d.T, extent=[0,ntrc*dx*noff, nz*dz,0], cmap=colormap)
+    
+    # lines and offsets
+    for i in range(noff):
+        plt.axvline(linewidth=2, color='k',x=(i+1)*ntrc*dx)
+        plt.text((i+1)*ntrc*dx-ntrc*dx/2,nz*dz+50,offsets[i],verticalalignment='top',horizontalalignment='center')        #custom axis
+
+    # new x axis
+    plt.gca().axes.get_xaxis().set_ticks([])  # hide original
+
+    plt.ylabel('Depth z in [m]')
+    plt.xlabel('\n\nOffset')
+    plt.savefig(filepath, bbox_inches='tight')
+    plt.show()
+
+
+
 
 
 def taper(data,traces=20):
@@ -174,18 +186,81 @@ def taper(data,traces=20):
     return data
 
 def check_amplitudes(data):
-    maxamp = list()
-    for i in xrange(0,data.shape[0]):
-        maxamp.append(max(abs(data[i,:])))
+    maxamp = np.zeros((noff, data.shape[1]))
+    for ioff in range(noff):
+        for i in xrange(0,data.shape[1]):
+            maxamp[ioff,i] = (max(abs(data[ioff,i,:])))
+
 
     #plot
+    colors = ["#a5b7e6","#274db3","#296f80","#8d6450","#b34127"]
     plt.figure()
-    plt.plot(range(len(maxamp)),maxamp,'-')
+    for i in range(noff):
+        plt.plot(range(data.shape[1]),maxamp[i,:],colors[i],label="Offset %dm"%(i*500),linewidth=2)
+
+    plt.legend(loc="lower center")
     plt.xlabel('Trace')
     plt.ylabel('Maximum amplitude')
 
     plt.savefig('./figures/amplitudes.eps', bbox_inches=0)
 
+    return maxamp
+
+def v_analysis2(data,h1,h2,v):
+    nx=1
+
+    off1 = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,h1)
+    off2 = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,h2)
+
+
+    zm1 = np.argmax(off1)*dz
+    zm2 = np.argmax(off2)*dz
+
+
+    h12 = (offsets[h1]/2)**2
+    h22 = (offsets[h2]/2)**2
+
+    print zm1,zm2,h12,h22
+
+    v0 = v * (np.sqrt((zm1**2 - zm2**2)/(h12-h22) +1 ))**-1
+
+
+    return(v0)
+
+
+def plot_zm():
+    
+    z0 = 1
+    v0 = 1
+    
+    hlist = np.linspace(0,3,100)
+    zm = np.zeros((3,100))
+
+    i=0
+    n=0
+    for vm in [0.9*v0, v0, 1.1*v0]:
+        for h in hlist:
+            zm[i,n] = np.sqrt(vm**2 * (h**2+z0**2)/(v0**2)-h**2)
+
+            n=n+1
+        n=0
+        i=i+1
+
+    plt.figure()
+    plt.plot(hlist,zm[0,:],'#8d6450',label='$v_m = 0.9v_0$',linewidth=2)
+    plt.plot(hlist,zm[1,:],'#274db3',label='$v_m = 1.0v_0$',linewidth=2)
+    plt.plot(hlist,zm[2,:],'#b34127',label='$v_m = 1.1v_0$',linewidth=2)
+
+    plt.legend(loc="lower left")
+
+    plt.xlabel('$h/z_0$',fontsize=15)
+    plt.ylabel('$z_m/z_0$',fontsize=15)
+
+    plt.savefig('./figures/zmh.eps', bbox_inches=0)
+    plt.show()
+
+
+    return zm
 
 ##################################################################
 
