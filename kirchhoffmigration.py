@@ -4,9 +4,6 @@ import matplotlib.pyplot as plt
 import scipy
 import scipy.fftpack
 
-
-
-# cython for more speed
 import mod_cyMigrate
 
 def PlotSpectrum(trace):
@@ -77,10 +74,8 @@ def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
                 it = np.floor(t/dt)         # nearest neighbor for timesample
 
                 #print rs, rr, ix, iz, t, it
-
                 if (it <= nsmp-1):
                     R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
-
     return R
 
 def benchmarkfunc(mode):
@@ -137,7 +132,6 @@ def full_migration(data):
     R = np.zeros((noff,nx, nz))
     for ioff in range(noff):            # each offset in its own layer
         R[ioff,:,:] = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V,offsets,nsmp,ntrc,noff,ioff)
-
     return R
 
 def plot_offsets(data,name):
