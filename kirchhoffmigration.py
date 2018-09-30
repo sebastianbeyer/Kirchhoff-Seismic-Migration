@@ -282,24 +282,27 @@ inputs = np.fromfile(f, dtype=np.float32)
 data = inputs.reshape(noff,ntrc,nsmp)
 
 
+##########################
+PlotImg(data,'unprocessed', 1001)
+
+# v_analysis(2000, 5000)
+# v_analysis results in v=2950 at a depth of z=1970
 
 
 
+migrated = full_migration(data)
+PlotImg(migrated, 'migrated_data', 300)
 
-#full_migration(taperdata,'tapered')
 
-#PlotWiggle(1)
-#PlotSpectrum(59)
-#plt.show()
-#v_analysis(2000, 5000)
-# v_analysis ergibt v=2950 bei z=1970
-#PlotImg(data,'unprocessed')
-#plt.show()
+## taper the data to reduce artifacts
+taperdata = taper(data)
+PlotImg(taperdata,'tapered_original_data', 1001)
+
+migrated_tapered = full_migration(taperdata)
+PlotImg(migrated_tapered, 'migrated_tapered_data', 300)
+
+###################################
 #benchmark()
-#full_migration(data)
-#taperdata = taper(data)
-#PlotImg(taperdata,'tapered_data')
-#full_migration(taperdata,'tapered')
-
-
-
+# PlotSpectrum(59)
+# zm = plot_zm()
+# check_amplitudes(data)
