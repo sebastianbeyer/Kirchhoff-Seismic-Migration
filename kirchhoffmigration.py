@@ -61,12 +61,12 @@ def PlotImg(data2d,name):
 def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
 
     R = np.zeros((nx, nz))
-    for ix in xrange(0, nx):        #loop over discreticized undergroundpoints in x
+    for ix in range(0, nx):        #loop over discreticized undergroundpoints in x
         x = dx*ix
-        for iz in xrange(1, nz):    #loop over discreticized undergroundpoints in z
+        for iz in range(1, nz):    #loop over discreticized undergroundpoints in z
             z = dz*iz               #(depth)
 
-            for itrc in xrange(0, ntrc):     #loop over all traces
+            for itrc in range(0, ntrc):     #loop over all traces
                 ksi = dcdp * itrc           # cdp point
                 h = offsets[ioff]/2         # half offset
                 rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point<->source
@@ -118,7 +118,7 @@ def v_analysis(vmin, vmax):
     V = np.linspace(vmin,vmax,nvels)
     nx=1                                # only compute one trace
     M = np.zeros((nz, nvels))
-    for n in xrange(0, len(V)-1):
+    for n in range(0, len(V)-1):
         R = mod_cyMigrate.cyMigrate(data,nx,dx,nz,dz,dt,dcdp,V[n],offsets,nsmp,ntrc,noff,1)
         M[:,n] = R[0,:]
 
@@ -177,8 +177,8 @@ def taper(data,traces=20):
         amount.append(np.sin(x))
         i=i+1
 
-    for off in xrange(0,noff):
-        for n in xrange(0,traces):
+    for off in range(0,noff):
+        for n in range(0,traces):
             data[off,n,:] = data[off,n,:]*amount[n]
             data[off,ntrc-1-n,:] = data[off,ntrc-1-n,:]*amount[n]
 
@@ -187,7 +187,7 @@ def taper(data,traces=20):
 def check_amplitudes(data):
     maxamp = np.zeros((noff, data.shape[1]))
     for ioff in range(noff):
-        for i in xrange(0,data.shape[1]):
+        for i in range(0,data.shape[1]):
             maxamp[ioff,i] = (max(abs(data[ioff,i,:])))
 
 
