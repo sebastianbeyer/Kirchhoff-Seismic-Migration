@@ -34,8 +34,8 @@ def PlotSpectrum(trace):
 
 
 
-def PlotImg(data2d,name):
-    data2d = inputs.reshape(noff*ntrc,nsmp) # reshape into 2d array with all offsets
+def PlotImg(data2d,name, ndepth):
+    data2d = data2d.reshape(noff*ntrc,ndepth)
 
     filepath = "./figures/" + name + ".eps"
 
@@ -55,8 +55,6 @@ def PlotImg(data2d,name):
     plt.xlabel('\n\nOffset')
     plt.ylabel('Time in [s]')
     plt.savefig(filepath, bbox_inches=0)
-    plt.show()
-
 
 def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
 
