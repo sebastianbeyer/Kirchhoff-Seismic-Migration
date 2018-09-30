@@ -23,7 +23,7 @@ def PlotSpectrum(trace):
     FFT = abs(scipy.fft(data[1,trace,:]))
     freqs = scipy.fftpack.fftfreq(data[1,1,:].size, dt)
 
-    half = len(freqs)/2
+    half = len(freqs)//2
     # plot
     plt.figure()
     plt.plot(freqs[0:half],FFT[0:half],'#384c80',linewidth=2)
@@ -68,6 +68,7 @@ def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
 
             for itrc in range(0, ntrc):     #loop over all traces
                 ksi = dcdp * itrc           # cdp point
+                # h = offsets[ioff]//2         # half offset
                 h = offsets[ioff]/2         # half offset
                 rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point<->source
                 rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point<->reciever
