@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-from __future__ import division     # true float division
+#!/usr/bin/env python3
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy
@@ -60,29 +59,29 @@ def PlotImg(data2d,name):
 
 
 def Migrate(data,nx,dx,nz,dz,dt,dcdp,v,offsets,nsmp,ntrc,noff,ioff):
-    
+
     R = np.zeros((nx, nz))
     for ix in xrange(0, nx):        #loop over discreticized undergroundpoints in x
         x = dx*ix
         for iz in xrange(1, nz):    #loop over discreticized undergroundpoints in z
             z = dz*iz               #(depth)
-            
+
             for itrc in xrange(0, ntrc):     #loop over all traces
                 ksi = dcdp * itrc           # cdp point
                 h = offsets[ioff]/2         # half offset
                 rs = np.sqrt( (x - (ksi-h))**2 + z**2)     # distance point<->source
                 rr = np.sqrt( (x - (ksi+h))**2 + z**2)     # distance point<->reciever
-    
+
                 wco = ( z/rs * np.sqrt(rs/rr) + z/rr * np.sqrt(rr/rs) ) /v
-    
+
                 t = (rs + rr)/v             # resulting time
                 it = np.floor(t/dt)         # nearest neighbor for timesample
-    
+
                 #print rs, rr, ix, iz, t, it
-    
+
                 if (it <= nsmp-1):
                     R[ix,iz] = R[ix,iz] + data[ioff,itrc,it] * wco /np.sqrt(2*np.pi)
-    
+
     return R
 
 def benchmarkfunc(mode):
@@ -97,15 +96,15 @@ def benchmarkfunc(mode):
 def benchmark():
     import timeit
     nx = 1
-    print "Benchmarking python vs cython:"
-    print "Migrating 10 times with nx=",nx
-    print "python code:"
+    print("Benchmarking python vs cython:")
+    print("Migrating 10 times with nx=",nx)
+    print("python code:")
     py_time = timeit.timeit("kirchhoffmigration.benchmarkfunc('python')",setup="import kirchhoffmigration", number=10)
-    print py_time
+    print(py_time)
 
-    print "cython code:"
+    print("cython code:")
     cy_time = timeit.timeit("kirchhoffmigration.benchmarkfunc('cython')",setup="import kirchhoffmigration", number=10)
-    print cy_time
+    print(cy_time)
 
 
 
@@ -148,7 +147,7 @@ def plot_offsets(data,name):
     filepath = "./figures/" + name + ".eps"
     plt.figure()
     plt.imshow(data2d.T, extent=[0,ntrc*dx*noff, nz*dz,0], cmap=colormap)
-    
+
     # lines and offsets
     for i in range(noff):
         plt.axvline(linewidth=2, color='k',x=(i+1)*ntrc*dx)
@@ -220,7 +219,7 @@ def v_analysis2(data,h1,h2,v):
     h12 = (offsets[h1]/2)**2
     h22 = (offsets[h2]/2)**2
 
-    print zm1,zm2,h12,h22
+    print(zm1,zm2,h12,h22)
 
     v0 = v * (np.sqrt((zm1**2 - zm2**2)/(h12-h22) +1 ))**-1
 
@@ -229,10 +228,10 @@ def v_analysis2(data,h1,h2,v):
 
 
 def plot_zm():
-    
+
     z0 = 1
     v0 = 1
-    
+
     hlist = np.linspace(0,3,100)
     zm = np.zeros((3,100))
 
