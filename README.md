@@ -1,5 +1,5 @@
 
-Simple example of Kirchhof seismic migration.
+Simple implementation of [Kirchhof seismic migration](https://en.wikipedia.org/wiki/Seismic_migration) in Python/Cython.
 
 ## usage:
 
